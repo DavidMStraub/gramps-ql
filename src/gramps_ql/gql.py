@@ -1,0 +1,2 @@
+def gql():
+    return None

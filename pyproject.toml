@@ -1,0 +1,27 @@
+[project]
+name = "gramps-ql"
+description = "A Python library to filter Gramps objects by a query syntax"
+authors = [
+  { name = "David M. Straub", email = "straub@protonmail.com" },
+]
+license = { text = "MIT" }
+readme = "README.md"
+dynamic = ["version"]
+dependencies = []
+
+[project.urls]
+homepage = "https://github.com/DavidMStraub/gramps-ql"
+repository = "https://github.com/DavidMStraub/gramps-ql"
+
+[build-system]
+requires = ["setuptools>=61.0", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.isort]
+profile = "black"
+
+[tool.setuptools_scm]
+# NOTE: Using a version file avoids some overhead
+#
+# This file is explicitly ignored by version control.
+write_to = "src/gramps_ql/_version.py"
