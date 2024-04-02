@@ -14,4 +14,4 @@ __all__ = (
     "__version_tuple__",
 )
 
-from .gql import gql
+from .gql import match, parse
