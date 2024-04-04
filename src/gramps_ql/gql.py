@@ -131,6 +131,8 @@ class GQLQuery:
                 result = obj.get(parsed[0])
             elif part in ["[", "]", "."]:
                 continue
+            elif part == "length":
+                result = len(result)
             else:
                 try:
                     result = result[part]
@@ -141,7 +143,10 @@ class GQLQuery:
         if not operator:
             return bool(result)
         if isinstance(rhs, str):
-            rhs = rhs.strip("\"'")
+            if rhs.isdigit():
+                rhs = int(rhs)
+            else:
+                rhs = rhs.strip("\"'")
         if operator == "=":
             return result == rhs
         if operator == "!=":

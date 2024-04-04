@@ -49,3 +49,10 @@ def test_match_and():
 def test_match_and_or():
     q = GQLQuery("one.two = x and three.four[0] = y or five")
     assert q.match({"one": {"two": "x"}, "three": {"four": ["y"]}, "five": 1})
+
+
+def test_length():
+    q = GQLQuery("array.length = 1")
+    assert not q.match({"array": []})
+    assert not q.match({"array": [1, 1]})
+    assert q.match({"array": [1]})
