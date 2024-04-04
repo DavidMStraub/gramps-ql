@@ -2,10 +2,13 @@
 
 from __future__ import annotations  # can be removed at 3.8 EOL
 
+import json
+from collections.abc import Generator
 from typing import Any, Optional
 
 import pyparsing as pp
 from gramps.gen.db import DbReadBase
+from gramps.gen.lib import PrimaryObject
 from gramps.gen.lib.serialize import to_json
 
 pp.ParserElement.enablePackrat()
@@ -39,6 +42,18 @@ infix = pp.infix_notation(
         (logical_or, 2, pp.OpAssoc.LEFT),
     ],
 )
+
+GRAMPS_OBJECT_NAMES = {
+    "person": "people",
+    "family": "families",
+    "event": "events",
+    "place": "places",
+    "citation": "citations",
+    "source": "sources",
+    "repository": "repositories",
+    "media": "media",
+    "note": "notes",
+}
 
 
 def parse(query: str):
@@ -117,6 +132,8 @@ class GQLQuery:
                 return False
         if not operator:
             return bool(result)
+        if isinstance(rhs, str):
+            rhs = rhs.strip("\"'")
         if operator == "=":
             return result == rhs
         if operator == "!=":
@@ -133,8 +150,12 @@ class GQLQuery:
         except TypeError:
             return False
 
-    def iter_objects(self, db: DbReadBase):
-        for person in db.iter_people():
-            if self.match(to_json(person)):
-                return person
-                return person
+    def iter_objects(self, db: DbReadBase) -> Generator[PrimaryObject, None, None]:
+        """Iterate over primary objects in a Gramps database."""
+        for object_name, objects_name in GRAMPS_OBJECT_NAMES.items():
+            iter_method = getattr(db, f"iter_{objects_name}")
+            for obj in iter_method():
+                obj_dict = json.loads(to_json(obj))
+                obj_dict["type"] = obj_dict["_class"].lower()
+                if self.match(obj_dict):
+                    yield obj
