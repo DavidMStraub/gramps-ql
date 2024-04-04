@@ -1,7 +1,5 @@
 """Gramps Query Language."""
 
-from __future__ import annotations  # can be removed at 3.8 EOL
-
 from typing import Any, Optional
 
 import pyparsing as pp

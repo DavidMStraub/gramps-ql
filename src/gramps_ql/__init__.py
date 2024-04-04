@@ -1,3 +1,5 @@
+from __future__ import annotations  # can be removed at 3.8 EOL
+
 __version__: str | None
 __version_tuple__: tuple | None
 
