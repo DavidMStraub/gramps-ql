@@ -1,3 +1,4 @@
+from gramps_ql import match
 from gramps_ql.gql import GQLQuery
 
 
@@ -28,8 +29,11 @@ def test_match_single_number():
 
 
 def test_match():
-    q = GQLQuery("one.two = x")
-    assert q.match({"one": {"two": "x"}, "three": {"four": ["y"]}})
+    query = "one.two = x"
+    q = GQLQuery(query)
+    obj = {"one": {"two": "x"}, "three": {"four": ["y"]}}
+    assert q.match(obj)
+    assert match(query, obj)
 
 
 def test_match_noop():

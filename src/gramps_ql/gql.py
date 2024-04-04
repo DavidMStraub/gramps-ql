@@ -9,9 +9,9 @@ import pyparsing as pp
 pp.ParserElement.enablePackrat()
 
 
-def match(query: str):
+def match(query: str, obj: dict[str, Any]) -> bool:
     gq = GQLQuery(query=query)
-    return gq.parse()
+    return gq.match(obj)
 
 
 word = pp.Word(pp.alphanums + "." + "_")
@@ -89,7 +89,7 @@ class GQLQuery:
             result = self._combine_logical(op, result, value)
         return result
 
-    def match(self, obj: dict[str, Any]):
+    def match(self, obj: dict[str, Any]) -> bool:
         """Match an object to the query."""
         parsed_list = self.parsed.as_list()
         return self._traverse(parsed_list, obj)
