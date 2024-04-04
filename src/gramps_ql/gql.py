@@ -15,11 +15,13 @@ pp.ParserElement.enablePackrat()
 
 
 def match(query: str, obj: dict[str, Any]) -> bool:
+    """Match a single object (given as dictionary) to a query."""
     gq = GQLQuery(query=query)
     return gq.match(obj)
 
 
 def iter_objects(query: str, db: DbReadBase) -> Generator[PrimaryObject, None, None]:
+    """Iterate over primary objects in a Gramps database."""
     gq = GQLQuery(query=query)
     return gq.iter_objects(db)
 
@@ -62,6 +64,7 @@ GRAMPS_OBJECT_NAMES = {
 
 
 def parse(query: str):
+    """Parse a query."""
     return infix.parse_string(query, parse_all=True)
 
 

@@ -16,4 +16,4 @@ __all__ = (
     "__version_tuple__",
 )
 
-from .gql import match, parse
+from .gql import iter_objects, match, parse

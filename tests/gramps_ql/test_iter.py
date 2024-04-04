@@ -32,6 +32,9 @@ def db():
 
 def test_fixture(db):
     assert isinstance(db, DbReadBase)
+
+
+def test_person_gramps_id(db):
     q = GQLQuery("type=person")
     assert len(list(q.iter_objects(db))) == 1
     for obj in q.iter_objects(db):
@@ -49,5 +52,4 @@ def test_fixture(db):
     q = GQLQuery("type=person and gramps_id < 'person002'")
     assert len(list(q.iter_objects(db))) == 1
     q = GQLQuery("type=person and gramps_id < 'person002'")
-    assert len(list(q.iter_objects(db))) == 1
     assert len(list(q.iter_objects(db))) == 1
