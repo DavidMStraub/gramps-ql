@@ -19,6 +19,11 @@ def match(query: str, obj: dict[str, Any]) -> bool:
     return gq.match(obj)
 
 
+def iter_objects(query: str, db: DbReadBase) -> Generator[PrimaryObject, None, None]:
+    gq = GQLQuery(query=query)
+    return gq.iter_objects(db)
+
+
 word = pp.Word(pp.alphanums + "." + "_")
 rhs = word | pp.dbl_quoted_string | pp.sgl_quoted_string
 # lhs = pp.Word(pp.identchars, pp.identbodychars + "." + "_")

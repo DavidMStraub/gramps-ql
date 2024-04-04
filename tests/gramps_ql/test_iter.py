@@ -1,3 +1,7 @@
+import os
+import shutil
+import tempfile
+
 import pytest
 from gramps.cli.clidbman import CLIDbManager
 from gramps.gen.db import DbReadBase, DbTxn
@@ -11,6 +15,8 @@ from gramps_ql.gql import GQLQuery
 @pytest.fixture
 def db():
     """Return Gramps Database."""
+    TEST_GRAMPSHOME = tempfile.mkdtemp()
+    os.environ["GRAMPSHOME"] = TEST_GRAMPSHOME
     dbman = CLIDbManager(DbState())
     path, name = dbman.create_new_db_cli("GQL Test", dbid="sqlite")
     db = make_database("sqlite")
@@ -21,6 +27,7 @@ def db():
         db.add_person(person, trans)
     yield db
     db.close()
+    shutil.rmtree(TEST_GRAMPSHOME)
 
 
 def test_fixture(db):
@@ -40,4 +47,7 @@ def test_fixture(db):
     q = GQLQuery("""type=person and gramps_id<"person002" """)
     assert len(list(q.iter_objects(db))) == 1
     q = GQLQuery("type=person and gramps_id < 'person002'")
+    assert len(list(q.iter_objects(db))) == 1
+    q = GQLQuery("type=person and gramps_id < 'person002'")
+    assert len(list(q.iter_objects(db))) == 1
     assert len(list(q.iter_objects(db))) == 1
