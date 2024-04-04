@@ -1,6 +1,6 @@
 """Gramps Query Language."""
 
-from typing import Any
+from typing import Any, Optional
 
 import pyparsing as pp
 
@@ -52,6 +52,16 @@ class GQLQuery:
         self.query = query
         self.parsed = parse(self.query)
 
+    @staticmethod
+    def _combine_logical(op: Optional[str], value1: bool, value2: bool) -> bool:
+        """Combine booleans with a logical operator as string."""
+        if op == "and":
+            return value1 and value2
+        elif op == "or":
+            return value1 or value2
+        # if op is None, return the second value
+        return value2
+
     def _traverse(self, parsed_list: list, obj: dict[str, Any]):
         """Traverse a nested parsed list."""
         result = None
@@ -61,35 +71,20 @@ class GQLQuery:
             if isinstance(item, list) or item in ["and", "or"]:
                 if expression:
                     value = self._match_single(obj, *expression)
-                    if op is None:
-                        result = value
-                    elif op == "and":
-                        result = result and value
-                    elif op == "or":
-                        result = result or value
+                    result = self._combine_logical(op, result, value)
                     op = None
                 expression = []
                 if item in ["and", "or"]:
                     op = item
                 elif isinstance(item, list):
                     value = self._traverse(item, obj)
-                    if op is None:
-                        result = value
-                    elif op == "and":
-                        result = result and value
-                    elif op == "or":
-                        result = result or value
+                    result = self._combine_logical(op, result, value)
                     op = None
             else:
                 expression.append(item)
         if expression:
             value = self._match_single(obj, *expression)
-            if op is None:
-                result = value
-            elif op == "and":
-                result = result and value
-            elif op == "or":
-                result = result or value
+            result = self._combine_logical(op, result, value)
         return result
 
     def match(self, obj: dict[str, Any]):
