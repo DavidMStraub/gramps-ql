@@ -1,8 +1,12 @@
 """Gramps Query Language."""
 
+from __future__ import annotations  # can be removed at 3.8 EOL
+
 from typing import Any, Optional
 
 import pyparsing as pp
+from gramps.gen.db import DbReadBase
+from gramps.gen.lib.serialize import to_json
 
 pp.ParserElement.enablePackrat()
 
@@ -128,3 +132,9 @@ class GQLQuery:
                 return result >= rhs
         except TypeError:
             return False
+
+    def iter_objects(self, db: DbReadBase):
+        for person in db.iter_people():
+            if self.match(to_json(person)):
+                return person
+                return person
