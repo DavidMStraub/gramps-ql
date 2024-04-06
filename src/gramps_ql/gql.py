@@ -133,6 +133,26 @@ class GQLQuery:
                 continue
             elif part == "length":
                 result = len(result)
+            elif part in ["all", "any"]:
+                if i + 1 == len(parsed):  # last item
+                    results = [
+                        self._match_values(item, operator, rhs) for item in result
+                    ]
+                elif len(parsed) > i + 1 and parsed[i + 1] == ".":
+                    lhs_rest = "".join(parsed[i + 2 :])
+                    results = [
+                        self._match_single(item, lhs_rest, operator, rhs)
+                        for item in result
+                    ]
+                else:
+                    raise ValueError(f"'any' cannot be followed by {parsed[i + 1]}")
+                try:
+                    if part == "all":
+                        return results and all(results)  # because all([]) is True
+                    else:
+                        return any(results)
+                except TypeError:
+                    return False
             else:
                 try:
                     result = result[part]
@@ -140,6 +160,10 @@ class GQLQuery:
                     return False
             if result is None:
                 return False
+        return self._match_values(result, operator, rhs)
+
+    def _match_values(self, result, operator: str = "", rhs: str = "") -> bool:
+        """Match two values."""
         if not operator:
             return bool(result)
         if isinstance(rhs, str):

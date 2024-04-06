@@ -70,3 +70,45 @@ def test_string_contains():
     assert not q.match({"string": "abc"})
     assert not q.match({"string": "145"})
     assert q.match({"string": "co2"})
+
+
+def test_any():
+    q = GQLQuery("array.any = 2")
+    assert not q.match({"array": []})
+    assert not q.match({"array": [3, 4, 5]})
+    assert q.match({"array": [1, 2, 3]})
+
+
+def test_any_string():
+    q = GQLQuery("array.any.value = a")
+    assert not q.match({"array": []})
+    assert not q.match({"array": [{"value": "c"}]})
+    assert q.match({"array": [{"value": "b"}, {"value": "a"}]})
+
+
+def test_any_number():
+    q = GQLQuery("array.any.value = 3")
+    assert not q.match({"array": []})
+    assert not q.match({"array": [{"value": 1}]})
+    assert q.match({"array": [{"value": 2}, {"value": 3}]})
+
+
+def test_all():
+    q = GQLQuery("array.all = 2")
+    assert not q.match({"array": []})
+    assert not q.match({"array": [2, 4, 5]})
+    assert q.match({"array": [2, 2, 2]})
+
+
+def test_all_string():
+    q = GQLQuery("array.all.value = a")
+    assert not q.match({"array": []})
+    assert not q.match({"array": [{"value": "a"}, {"value": "b"}]})
+    assert q.match({"array": [{"value": "a"}, {"value": "a"}]})
+
+
+def test_all_number():
+    q = GQLQuery("array.all.value = 3")
+    assert not q.match({"array": []})
+    assert not q.match({"array": [{"value": 1}, {"value": 3}]})
+    assert q.match({"array": [{"value": 3}, {"value": 3}]})
