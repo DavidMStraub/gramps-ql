@@ -151,6 +151,14 @@ class GQLQuery:
             return result == rhs
         if operator == "!=":
             return result != rhs
+        if operator == "~":
+            if isinstance(result, str):
+                rhs = str(rhs)
+            return rhs in result
+        if operator == "!~":
+            if isinstance(result, str):
+                rhs = str(rhs)
+            return rhs not in result
         try:
             if operator == "<":
                 return result < rhs

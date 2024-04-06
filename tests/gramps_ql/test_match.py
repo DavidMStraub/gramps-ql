@@ -56,3 +56,17 @@ def test_length():
     assert not q.match({"array": []})
     assert not q.match({"array": [1, 1]})
     assert q.match({"array": [1]})
+
+
+def test_array_contains():
+    q = GQLQuery("array ~ 2")
+    assert not q.match({"array": []})
+    assert not q.match({"array": [3, 4, 5]})
+    assert q.match({"array": [1, 2, 3]})
+
+
+def test_string_contains():
+    q = GQLQuery("string ~ 2")
+    assert not q.match({"string": "abc"})
+    assert not q.match({"string": "145"})
+    assert q.match({"string": "co2"})
