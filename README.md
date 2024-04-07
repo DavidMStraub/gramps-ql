@@ -28,9 +28,17 @@ A GQL query is a string composed of statements of the form `property operator va
 
 ### Properties
 
-`type`
+#### `type`
 
-Type filters for the Gramps object type and can be one of `person`, `family`, `event`, `place`, `citation`, `source`, `repository`, `media`, or `note`.
+Filters for the Gramps object type and can be one of `person`, `family`, `event`, `place`, `citation`, `source`, `repository`, `media`, or `note`.
+
+#### Object properties
+
+GQL supports querying nested properties of Gramps objects, e.g. `primary_name.date.calendar`. See below for a full list of properties – see also [Gramps Data Model](https://gramps-project.org/wiki/index.php/Gramps_Data_Model).
+
+#### List elements by index
+
+
 
 **To be continued**
 
