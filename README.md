@@ -71,7 +71,52 @@ all types of properties and Python rules for casting to true/false are applied. 
 
 Values can be numbers or strings. If numbers should be interpreted as strings or special characters like = are involved, enclose the value in strings. Examples: `gramps_id = F0001`, but `gramps_id = "0001"`.
 
-## List of Gramps Properties
+## Commented examples
+
+```sql
+type = note and private and text.string ~ David
+```
+
+All private notes that contain the string "David" in their text
+
+
+```sql
+media_list.length >= 10
+```
+
+All objects (of any type) with 10 or more media references
+
+```sql
+type != person and media_list.any.rect
+```
+
+All objects that are *not* a person but have a media reference that is part of an image. Here, `media_list.any.rect` means that for each of the items in the media list, it is checked whether the `rect` (rectangle) property has a truthy value, meaning it is a non-empty list. (`media_list.any.rect.length > 0` would have the same effect.)
+
+```sql
+type = family and child_ref_list.length > 10
+```
+
+Families with more than 10 children.
+
+```sql
+type = event and date.modifier = 0 and date.dateval[2] > 2020
+```
+
+Events where the date is a normal date (not a range etc.) and the year is after 2020.
+
+## Roadmap
+
+GQL could be used in Gramplets or in Gramps Web (API).
+
+The following improvements are currently being contemplated:
+
+- Better support for dates, e.g. comparing a string to a date
+- Support for links between objects, e.g. following a reference handle to the referenced object (`note_list.any.get_note.text.string ~ x` ...)
+- Performance improvements. Currently, the whole database needs to be read even for a simple query like `type=tag`.
+
+Suggestions for improvment as well as contributions are welcome!
+
+## Full list of Gramps Properties
 
 The following properties of Gramps objects exist as of Gramps 5.2.
 
