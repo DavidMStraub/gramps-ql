@@ -38,7 +38,7 @@ GQL supports querying nested properties of Gramps objects, e.g. `primary_name.da
 
 #### List elements by index
 
-
+Individual elements in list-like properties can be accessed by positional index in square brackets. This can be combined with nested properties, e.g. `primary_name.surname_list[0].surname`.
 
 **To be continued**
 
