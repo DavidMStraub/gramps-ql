@@ -40,7 +40,13 @@ GQL supports querying nested properties of Gramps objects, e.g. `primary_name.da
 
 Individual elements in list-like properties can be accessed by positional index in square brackets. This can be combined with nested properties, e.g. `primary_name.surname_list[0].surname`.
 
-**To be continued**
+#### `length`
+
+This is a special property that returns the length of an array-like Gramps property, e.g. `media_list.length > 0` to get objects with media references.
+
+#### `all`, `any`
+
+Two more special properties for array-like Gramps properties. `all` requires a condition to apply to all items of the list, `any` requires it to apply to at least one item. Both properties can be combined with other properties before and after. Examples: `media_list.any.citation_list.length > 0` to return objects with media references that have citations; `media_list.all.citation_list.length = 0` to return objects where all media objects do not have citations.
 
 ### Operators
 
