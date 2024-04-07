@@ -24,9 +24,40 @@ for obj in iter_objects(query, db):
 
 ## Syntax
 
-TODO
+A GQL query is a string composed of statements of the form `property operator value`, optionally combined with the keywords `and` and `or` as well as parentheses.
 
-## Properties
+### Properties
+
+`type`
+
+Type filters for the Gramps object type and can be one of `person`, `family`, `event`, `place`, `citation`, `source`, `repository`, `media`, or `note`.
+
+**To be continued**
+
+### Operators
+
+#### `=`, `!=`
+
+Equality or inequality. Examples: `type = person`, `type != family`
+
+#### `>`, `>=`, `<`, `<=`
+
+Comparison. Works for strings as well as numbers. Examples: `confidence <= 1`, `change > 1712477760 `, `gramps_id > "I2015"`
+
+#### `~`, `!~`
+
+Contains or does not contain. Works for lists as well as strings. Examples: `gramps_id !~ F00`, `author ~ David`, `family_list ~ "3a16680f7d226e3ac3eefc8b57a"`
+
+#### No operator/value
+
+If no operator and value is given, the value is interpreted as a boolean (true or false). This works for
+all types of properties and Python rules for casting to true/false are applied. For instance, the query `private` returns private objects; `confidence` returns objects where confidence is greater than 0; `media_list` returns objects with at least one media references.
+
+### Values
+
+Values can be numbers or strings. If numbers should be interpreted as strings or special characters like = are involved, enclose the value in strings. Examples: `gramps_id = F0001`, but `gramps_id = "0001"`.
+
+## List of Gramps Properties
 
 The following properties of Gramps objects exist as of Gramps 5.2.
 
