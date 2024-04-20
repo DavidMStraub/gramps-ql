@@ -4,7 +4,7 @@ from __future__ import annotations  # can be removed at 3.8 EOL
 
 import json
 from collections.abc import Generator
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 import pyparsing as pp
 from gramps.gen.db import DbReadBase
@@ -14,9 +14,13 @@ from gramps.gen.lib.serialize import to_json
 pp.ParserElement.enablePackrat()
 
 
-def match(query: str, obj: dict[str, Any]) -> bool:
-    """Match a single object (given as dictionary) to a query."""
+def match(query: str, obj: Union[PrimaryObject, dict[str, Any]]) -> bool:
+    """Match a single object (optionally given as dictionary) to a query."""
     gq = GQLQuery(query=query)
+    if isinstance(obj, PrimaryObject):
+        obj_dict = json.loads(to_json(obj))
+        obj_dict["type"] = obj_dict["_class"].lower()
+        return gq.match(obj_dict)
     return gq.match(obj)
 
 
