@@ -2,13 +2,13 @@ from gramps_ql import parse
 
 
 def test_single():
-    assert parse("type=person").as_list() == ["type", "=", "person"]
+    assert parse("class=person").as_list() == ["class", "=", "person"]
 
 
 def test_two():
-    assert parse("type=person or date.year > 2021").as_list() == [
+    assert parse("class=person or date.year > 2021").as_list() == [
         [
-            "type",
+            "class",
             "=",
             "person",
             "or",
@@ -20,27 +20,27 @@ def test_two():
 
 
 def test_three():
-    assert parse("type=person or name='John Doe' and date.year > 2021").as_list() == [
+    assert parse("class=person or name='John Doe' and date.year > 2021").as_list() == [
         [
-            "type",
+            "class",
             "=",
             "person",
             "or",
             ["name", "=", "'John Doe'", "and", "date.year", ">", "2021"],
         ]
     ]
-    assert parse("type=person and name='John Doe' or date.year > 2021").as_list() == [
+    assert parse("class=person and name='John Doe' or date.year > 2021").as_list() == [
         [
-            ["type", "=", "person", "and", "name", "=", "'John Doe'"],
+            ["class", "=", "person", "and", "name", "=", "'John Doe'"],
             "or",
             "date.year",
             ">",
             "2021",
         ]
     ]
-    assert parse("type=person and name='John Doe' or only_id").as_list() == [
+    assert parse("class=person and name='John Doe' or only_id").as_list() == [
         [
-            ["type", "=", "person", "and", "name", "=", "'John Doe'"],
+            ["class", "=", "person", "and", "name", "=", "'John Doe'"],
             "or",
             "only_id",
         ]
@@ -48,9 +48,11 @@ def test_three():
 
 
 def test_brackets():
-    assert parse("(type=person or name='John Doe') and date.year > 2021").as_list() == [
+    assert parse(
+        "(class=person or name='John Doe') and date.year > 2021"
+    ).as_list() == [
         [
-            ["type", "=", "person", "or", "name", "=", "'John Doe'"],
+            ["class", "=", "person", "or", "name", "=", "'John Doe'"],
             "and",
             "date.year",
             ">",
@@ -58,10 +60,10 @@ def test_brackets():
         ]
     ]
     assert parse(
-        "(((((((((((type=person or name='John Doe')))) and date.year > 2021)))))))"
+        "(((((((((((class=person or name='John Doe')))) and date.year > 2021)))))))"
     ).as_list() == [
         [
-            ["type", "=", "person", "or", "name", "=", "'John Doe'"],
+            ["class", "=", "person", "or", "name", "=", "'John Doe'"],
             "and",
             "date.year",
             ">",

@@ -72,6 +72,12 @@ def test_string_contains():
     assert q.match({"string": "co2"})
 
 
+def test_string_contains_case():
+    q = GQLQuery("string ~ a")
+    assert q.match({"string": "abc"})
+    assert q.match({"string": "Abc"})
+
+
 def test_any():
     q = GQLQuery("array.any = 2")
     assert not q.match({"array": []})

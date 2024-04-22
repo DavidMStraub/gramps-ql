@@ -19,7 +19,7 @@ def match(query: str, obj: Union[PrimaryObject, dict[str, Any]]) -> bool:
     gq = GQLQuery(query=query)
     if isinstance(obj, PrimaryObject):
         obj_dict = json.loads(to_json(obj))
-        obj_dict["type"] = obj_dict["_class"].lower()
+        obj_dict["class"] = obj_dict["_class"].lower()
         return gq.match(obj_dict)
     return gq.match(obj)
 
@@ -176,16 +176,24 @@ class GQLQuery:
             else:
                 rhs = rhs.strip("\"'")
         if operator == "=":
+            if isinstance(result, str):
+                rhs = str(rhs)
+                return result.casefold() == rhs.casefold()
             return result == rhs
         if operator == "!=":
+            if isinstance(result, str):
+                rhs = str(rhs)
+                return result.casefold() != rhs.casefold()
             return result != rhs
         if operator == "~":
             if isinstance(result, str):
                 rhs = str(rhs)
+                return rhs.casefold() in result.casefold()
             return rhs in result
         if operator == "!~":
             if isinstance(result, str):
                 rhs = str(rhs)
+                return rhs.casefold() in result.casefold()
             return rhs not in result
         try:
             if operator == "<":
@@ -205,6 +213,6 @@ class GQLQuery:
             iter_method = getattr(db, f"iter_{objects_name}")
             for obj in iter_method():
                 obj_dict = json.loads(to_json(obj))
-                obj_dict["type"] = obj_dict["_class"].lower()
+                obj_dict["class"] = obj_dict["_class"].lower()
                 if self.match(obj_dict):
                     yield obj

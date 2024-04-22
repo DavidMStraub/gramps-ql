@@ -35,21 +35,21 @@ def test_fixture(db):
 
 
 def test_person_gramps_id(db):
-    q = GQLQuery("type=person")
+    q = GQLQuery("class=person")
     assert len(list(q.iter_objects(db))) == 1
     for obj in q.iter_objects(db):
         assert isinstance(obj, Person)
-    q = GQLQuery("""type=person and gramps_id="person001" """)
+    q = GQLQuery("""class=person and gramps_id="person001" """)
     assert len(list(q.iter_objects(db))) == 1
-    q = GQLQuery("""type=person and gramps_id!="person001" """)
+    q = GQLQuery("""class=person and gramps_id!="person001" """)
     assert len(list(q.iter_objects(db))) == 0
-    q = GQLQuery("""type=person and gramps_id="person002" """)
+    q = GQLQuery("""class=person and gramps_id="person002" """)
     assert len(list(q.iter_objects(db))) == 0
-    q = GQLQuery("""type=person and gramps_id>"person002" """)
+    q = GQLQuery("""class=person and gramps_id>"person002" """)
     assert len(list(q.iter_objects(db))) == 0
-    q = GQLQuery("""type=person and gramps_id<"person002" """)
+    q = GQLQuery("""class=person and gramps_id<"person002" """)
     assert len(list(q.iter_objects(db))) == 1
-    q = GQLQuery("type=person and gramps_id < 'person002'")
+    q = GQLQuery("class=person and gramps_id < 'person002'")
     assert len(list(q.iter_objects(db))) == 1
-    q = GQLQuery("type=person and gramps_id < 'person002'")
+    q = GQLQuery("class=person and gramps_id < 'person002'")
     assert len(list(q.iter_objects(db))) == 1

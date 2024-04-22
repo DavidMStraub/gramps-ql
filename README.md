@@ -11,14 +11,14 @@ python -m pip install gramps-ql
 ## Usage
 
 ```python
-from gramps_ql import iter_objects
+import gramps_ql  as gql
 
 db = ... # A Gramps DbReadBase instance
 
 # iterate over private people
 query = 'type=person AND private'
 
-for obj in iter_objects(query, db):
+for obj in gql.iter_objects(query, db):
     f(obj) # do something with the Gramps object obj
 ```
 
