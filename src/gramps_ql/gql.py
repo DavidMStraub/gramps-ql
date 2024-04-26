@@ -8,26 +8,37 @@ from typing import Any, Optional, Union
 
 import pyparsing as pp
 from gramps.gen.db import DbReadBase
+from gramps.gen.errors import HandleError
 from gramps.gen.lib import PrimaryObject
 from gramps.gen.lib.serialize import to_json
 
 pp.ParserElement.enablePackrat()
 
 
-def match(query: str, obj: Union[PrimaryObject, dict[str, Any]]) -> bool:
+def to_dict(obj: PrimaryObject) -> dict[str, Any]:
+    """Convert a Gramps object to its dictionary representation."""
+    obj_dict = json.loads(to_json(obj))
+    obj_dict["class"] = obj_dict["_class"].lower()
+    return obj_dict
+
+
+def match(
+    query: str,
+    obj: Union[PrimaryObject, dict[str, Any]],
+    db: Optional[DbReadBase] = None,
+) -> bool:
     """Match a single object (optionally given as dictionary) to a query."""
-    gq = GQLQuery(query=query)
+    gq = GQLQuery(query=query, db=db)
     if isinstance(obj, PrimaryObject):
-        obj_dict = json.loads(to_json(obj))
-        obj_dict["class"] = obj_dict["_class"].lower()
+        obj_dict = to_dict(obj)
         return gq.match(obj_dict)
     return gq.match(obj)
 
 
 def iter_objects(query: str, db: DbReadBase) -> Generator[PrimaryObject, None, None]:
     """Iterate over primary objects in a Gramps database."""
-    gq = GQLQuery(query=query)
-    return gq.iter_objects(db)
+    gq = GQLQuery(query=query, db=db)
+    return gq.iter_objects()
 
 
 word = pp.Word(pp.alphanums + "." + "_")
@@ -79,9 +90,10 @@ def parse_lhs(query: str):
 class GQLQuery:
     """GQL query class."""
 
-    def __init__(self, query: str):
+    def __init__(self, query: str, db: Optional[DbReadBase] = None):
         self.query = query
         self.parsed = parse(self.query)
+        self.db = db
 
     @staticmethod
     def _combine_logical(op: Optional[str], value1: bool, value2: bool) -> bool:
@@ -131,7 +143,7 @@ class GQLQuery:
         if not parsed:
             raise ValueError(f"Unable to parse left-hand side: {lhs}")
         for i, part in enumerate(parsed):
-            if i == 0:
+            if i == 0 and isinstance(obj, dict):
                 result = obj.get(parsed[0])
             elif part in ["[", "]", "."]:
                 continue
@@ -157,6 +169,16 @@ class GQLQuery:
                         return any(results)
                 except TypeError:
                     return False
+            elif isinstance(part, str) and part.startswith("get_"):
+                if not self.db:
+                    raise ValueError("Database is needed for get")
+                try:
+                    if i == 0 and isinstance(obj, str):
+                        result = obj
+                    _obj = getattr(self.db, f"{part}_from_handle")(result)
+                except (AttributeError, HandleError):
+                    return False
+                result = to_dict(_obj)
             else:
                 try:
                     result = result[part]
@@ -207,12 +229,13 @@ class GQLQuery:
         except TypeError:
             return False
 
-    def iter_objects(self, db: DbReadBase) -> Generator[PrimaryObject, None, None]:
+    def iter_objects(self) -> Generator[PrimaryObject, None, None]:
         """Iterate over primary objects in a Gramps database."""
+        if not self.db:
+            raise ValueError("Database is needed for iterating objects!")
         for object_name, objects_name in GRAMPS_OBJECT_NAMES.items():
-            iter_method = getattr(db, f"iter_{objects_name}")
+            iter_method = getattr(self.db, f"iter_{objects_name}")
             for obj in iter_method():
-                obj_dict = json.loads(to_json(obj))
-                obj_dict["class"] = obj_dict["_class"].lower()
+                obj_dict = to_dict(obj)
                 if self.match(obj_dict):
                     yield obj

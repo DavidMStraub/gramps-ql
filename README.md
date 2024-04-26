@@ -10,16 +10,27 @@ python -m pip install gramps-ql
 
 ## Usage
 
+You can iterate over objects in a database matching the query:
+
 ```python
 import gramps_ql  as gql
 
 db = ... # A Gramps DbReadBase instance
 
 # iterate over private people
-query = 'type=person AND private'
+query = 'class=person AND private'
 
 for obj in gql.iter_objects(query, db):
     f(obj) # do something with the Gramps object obj
+```
+
+Alternatively, you can match individual objects:
+
+```python
+if gql.match(query, obj, db):
+    print("Object matches query 🙂")
+else:
+    print("Object matches query 🙁")
 ```
 
 ## Syntax
@@ -28,9 +39,9 @@ A GQL query is a string composed of statements of the form `property operator va
 
 ### Properties
 
-#### `type`
+#### `class`
 
-Filters for the Gramps object type and can be one of `person`, `family`, `event`, `place`, `citation`, `source`, `repository`, `media`, or `note`.
+Filters for the Gramps object class and can be one of `person`, `family`, `event`, `place`, `citation`, `source`, `repository`, `media`, or `note`.
 
 #### Object properties
 
@@ -48,11 +59,15 @@ This is a special property that returns the length of an array-like Gramps prope
 
 Two more special properties for array-like Gramps properties. `all` requires a condition to apply to all items of the list, `any` requires it to apply to at least one item. Both properties can be combined with other properties before and after. Examples: `media_list.any.citation_list.length > 0` to return objects with media references that have citations; `media_list.all.citation_list.length = 0` to return objects where all media objects do not have citations.
 
+#### `get_person`, etc.
+
+While all the preceding properties refer to a single Gramps object, it is also possible to filter on different objects referred to by the initial object. For instance, an event has a place handle in its `place` property. Using the `get_place` pseudo-property, GQL switches to the properties of that object. For instance, it is possible to search for `class = event and place.get_place.name.value ~ York`. This can also be combined with `any` or `all`, e.g. `class = person and event_ref_list.any.ref.get_event.description ~ farmer`.
+
 ### Operators
 
 #### `=`, `!=`
 
-Equality or inequality. Examples: `type = person`, `type != family`
+Equality or inequality. Examples: `class = person`, `class != family`
 
 #### `>`, `>=`, `<`, `<=`
 
@@ -74,7 +89,7 @@ Values can be numbers or strings. If numbers should be interpreted as strings or
 ## Commented examples
 
 ```sql
-type = note and private and text.string ~ David
+class = note and private and text.string ~ David
 ```
 
 All private notes that contain the string "David" in their text
@@ -84,25 +99,39 @@ All private notes that contain the string "David" in their text
 media_list.length >= 10
 ```
 
-All objects (of any type) with 10 or more media references
+All objects (of any class) with 10 or more media references
 
 ```sql
-type != person and media_list.any.rect
+class != person and media_list.any.rect
 ```
 
 All objects that are *not* a person but have a media reference that is part of an image. Here, `media_list.any.rect` means that for each of the items in the media list, it is checked whether the `rect` (rectangle) property has a truthy value, meaning it is a non-empty list. (`media_list.any.rect.length > 0` would have the same effect.)
 
 ```sql
-type = family and child_ref_list.length > 10
+class = family and child_ref_list.length > 10
 ```
 
 Families with more than 10 children.
 
 ```sql
-type = event and date.modifier = 0 and date.dateval[2] > 2020
+class = event and date.modifier = 0 and date.dateval[2] > 2020
 ```
 
 Events where the date is a normal date (not a range etc.) and the year is after 2020.
+
+```sql
+note_list.any.get_note.text.string ~ "David"
+```
+
+All objects with at least one note that contains the string "David" in their text.
+
+
+```sql
+class = family and child_ref_list.all.ref.get_person.gender = 0 child_ref_list.length = 3
+```
+
+All families with three daughters.
+
 
 ## Roadmap
 
@@ -112,7 +141,7 @@ The following improvements are currently being contemplated:
 
 - Better support for dates, e.g. comparing a string to a date
 - Support for links between objects, e.g. following a reference handle to the referenced object (`note_list.any.get_note.text.string ~ x` ...)
-- Performance improvements. Currently, the whole database needs to be read even for a simple query like `type=tag`.
+- Performance improvements. Currently, the whole database needs to be read even for a simple query like `class=tag`.
 
 Suggestions for improvment as well as contributions are welcome!
 
