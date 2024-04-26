@@ -30,7 +30,7 @@ Alternatively, you can match individual objects:
 if gql.match(query, obj, db):
     print("Object matches query 🙂")
 else:
-    print("Object matches query 🙁")
+    print("Object doesn't match query 🙁")
 ```
 
 ## Syntax
