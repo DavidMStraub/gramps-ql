@@ -140,7 +140,6 @@ GQL could be used in Gramplets or in Gramps Web (API).
 The following improvements are currently being contemplated:
 
 - Better support for dates, e.g. comparing a string to a date
-- Support for links between objects, e.g. following a reference handle to the referenced object (`note_list.any.get_note.text.string ~ x` ...)
 - Performance improvements. Currently, the whole database needs to be read even for a simple query like `class=tag`.
 
 Suggestions for improvment as well as contributions are welcome!
