@@ -13,7 +13,7 @@ python -m pip install gramps-ql
 You can iterate over objects in a database matching the query:
 
 ```python
-import gramps_ql  as gql
+import gramps_ql as gql
 
 db = ... # A Gramps DbReadBase instance
 
@@ -59,6 +59,10 @@ This is a special property that returns the length of an array-like Gramps prope
 
 Two more special properties for array-like Gramps properties. `all` requires a condition to apply to all items of the list, `any` requires it to apply to at least one item. Both properties can be combined with other properties before and after. Examples: `media_list.any.citation_list.length > 0` to return objects with media references that have citations; `media_list.all.citation_list.length = 0` to return objects where all media objects do not have citations.
 
+#### Array index
+
+A numerical array index can be used to access specific elements of a list, e.g. `child_ref_list[0]` for the first child.
+
 #### `get_person`, etc.
 
 While all the preceding properties refer to a single Gramps object, it is also possible to filter on different objects referred to by the initial object. For instance, an event has a place handle in its `place` property. Using the `get_place` pseudo-property, GQL switches to the properties of that object. For instance, it is possible to search for `class = event and place.get_place.name.value ~ York`. This can also be combined with `any` or `all`, e.g. `class = person and event_ref_list.any.ref.get_event.description ~ farmer`.
@@ -80,7 +84,7 @@ Contains or does not contain. Works for lists as well as strings. Examples: `gra
 #### No operator/value
 
 If no operator and value is given, the value is interpreted as a boolean (true or false). This works for
-all types of properties and Python rules for casting to true/false are applied. For instance, the query `private` returns private objects; `confidence` returns objects where confidence is greater than 0; `media_list` returns objects with at least one media references.
+all types of properties and Python rules for casting to true/false are applied. For instance, the query `private` returns private objects; `confidence` returns objects where confidence is greater than 0; `media_list` returns objects with at least one media reference.
 
 ### Values
 
@@ -127,7 +131,7 @@ All objects with at least one note that contains the string "David" in their tex
 
 
 ```sql
-class = family and child_ref_list.all.ref.get_person.gender = 0 child_ref_list.length = 3
+class = family and child_ref_list.all.ref.get_person.gender = 0 and child_ref_list.length = 3
 ```
 
 All families with three daughters.
