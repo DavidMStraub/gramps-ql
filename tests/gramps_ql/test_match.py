@@ -166,3 +166,17 @@ def test_match_string_regex_repeat_incomplete():
     obj = {"prop": "yyabababbababaxx"}
     q = GQLQuery('prop ~ "[ab]*"')
     assert q.match(obj)
+
+
+def test_match_string_regex_rppr():
+    obj = {"prop": "x"}
+    q = GQLQuery(r'prop = "\y"')
+    assert not q.match(obj)
+
+
+def test_match_string_regex_timeout():
+    obj = {"prop": "x"}
+    q = GQLQuery('prop = "[x]*"')
+    assert q.match(obj)
+    q.REGEX_TIMEOUT = 1e-16
+    assert not q.match(obj)

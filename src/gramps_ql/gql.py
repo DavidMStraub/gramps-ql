@@ -243,7 +243,7 @@ class GQLQuery:
             if full:
                 return regex.fullmatch(pattern, string, timeout=self.REGEX_TIMEOUT)
             return regex.match(pattern, string, timeout=self.REGEX_TIMEOUT)
-        except (ValueError, regex.error, SyntaxError):
+        except (ValueError, regex.error, SyntaxError, TimeoutError):
             return False
 
     def iter_objects(self) -> Generator[PrimaryObject, None, None]:
