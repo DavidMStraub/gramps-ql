@@ -118,3 +118,65 @@ def test_all_number():
     assert not q.match({"array": []})
     assert not q.match({"array": [{"value": 1}, {"value": 3}]})
     assert q.match({"array": [{"value": 3}, {"value": 3}]})
+
+
+def test_match_string_regex():
+    obj = {"prop": "test"}
+    q = GQLQuery('prop = "^test"')
+    assert q.match(obj)
+    q = GQLQuery('prop = "test"')
+    assert q.match(obj)
+    q = GQLQuery('prop = "^tes"')
+    assert not q.match(obj)
+
+
+def test_match_string_regex_escape():
+    obj = {"prop": "test1"}
+    q = GQLQuery(r'prop = "^t\wst\d"')
+    assert q.match(obj)
+    q = GQLQuery(r'prop = "^t\wst\d\d"')
+    assert not q.match(obj)
+
+
+def test_match_string_regex_repeat():
+    obj = {"prop": "abababbababa"}
+    q = GQLQuery('prop = "[ab]*"')
+    assert q.match(obj)
+
+
+def test_match_string_regex_incomplete():
+    obj = {"prop": "test"}
+    q = GQLQuery('prop ~ "^test"')
+    assert q.match(obj)
+    q = GQLQuery('prop ~ "test"')
+    assert q.match(obj)
+    q = GQLQuery('prop ~ "^tes"')
+    assert q.match(obj)
+
+
+def test_match_string_regex_escape_incomplete():
+    obj = {"prop": "test1"}
+    q = GQLQuery(r'prop ~ "^t\wst\d"')
+    assert q.match(obj)
+    q = GQLQuery(r'prop ~ "^t\wst"')
+    assert q.match(obj)
+
+
+def test_match_string_regex_repeat_incomplete():
+    obj = {"prop": "yyabababbababaxx"}
+    q = GQLQuery('prop ~ "[ab]*"')
+    assert q.match(obj)
+
+
+def test_match_string_regex_rppr():
+    obj = {"prop": "x"}
+    q = GQLQuery(r'prop = "\y"')
+    assert not q.match(obj)
+
+
+def test_match_string_regex_timeout():
+    obj = {"prop": "x"}
+    q = GQLQuery('prop = "[x]*"')
+    assert q.match(obj)
+    q.REGEX_TIMEOUT = 1e-16
+    assert not q.match(obj)
