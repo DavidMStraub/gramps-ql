@@ -6,6 +6,7 @@ import json
 from collections.abc import Generator
 from typing import Any, Optional, Union
 
+import regex
 import pyparsing as pp
 from gramps.gen.db import DbReadBase
 from gramps.gen.errors import HandleError
@@ -89,6 +90,8 @@ def parse_lhs(query: str):
 
 class GQLQuery:
     """GQL query class."""
+
+    REGEX_TIMEOUT = 2
 
     def __init__(self, query: str, db: Optional[DbReadBase] = None):
         self.query = query
@@ -200,7 +203,9 @@ class GQLQuery:
         if operator == "=":
             if isinstance(result, str):
                 rhs = str(rhs)
-                return result.casefold() == rhs.casefold()
+                return result.casefold() == rhs.casefold() or self._match_regex(
+                    rhs, result, full=True
+                )
             return result == rhs
         if operator == "!=":
             if isinstance(result, str):
@@ -210,7 +215,9 @@ class GQLQuery:
         if operator == "~":
             if isinstance(result, str):
                 rhs = str(rhs)
-                return rhs.casefold() in result.casefold()
+                return rhs.casefold() in result.casefold() or self._match_regex(
+                    rhs, result, full=False
+                )
             return rhs in result
         if operator == "!~":
             if isinstance(result, str):
@@ -227,6 +234,16 @@ class GQLQuery:
             if operator == ">=":
                 return result >= rhs
         except TypeError:
+            return False
+        return False
+
+    def _match_regex(self, pattern: str, string: str, full: bool) -> bool:
+        """Match a regular expression."""
+        try:
+            if full:
+                return regex.fullmatch(pattern, string, timeout=self.REGEX_TIMEOUT)
+            return regex.match(pattern, string, timeout=self.REGEX_TIMEOUT)
+        except (ValueError, regex.error, SyntaxError):
             return False
 
     def iter_objects(self) -> Generator[PrimaryObject, None, None]:
