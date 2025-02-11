@@ -12,6 +12,9 @@ from gramps.gen.errors import HandleError
 from gramps.gen.lib import PrimaryObject
 
 
+pp.ParserElement.enablePackrat()
+
+
 def obj_to_json(obj: PrimaryObject) -> dict[str, Any]:
     """Convert a Gramps object to JSON."""
     try:
@@ -24,9 +27,6 @@ def obj_to_json(obj: PrimaryObject) -> dict[str, Any]:
         from gramps.gen.lib.serialize import to_json
 
         return json.loads(to_json(obj))
-
-
-pp.ParserElement.enablePackrat()
 
 
 def to_dict(obj: PrimaryObject) -> dict[str, Any]:
