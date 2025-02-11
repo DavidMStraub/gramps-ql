@@ -1,6 +1,6 @@
 """Gramps Query Language."""
 
-from __future__ import annotations  # can be removed at 3.8 EOL
+from __future__ import annotations  # can be removed at 3.9 EOL
 
 import json
 from collections.abc import Generator
@@ -10,14 +10,28 @@ import pyparsing as pp
 from gramps.gen.db import DbReadBase
 from gramps.gen.errors import HandleError
 from gramps.gen.lib import PrimaryObject
-from gramps.gen.lib.serialize import to_json
+
+
+def obj_to_json(obj: PrimaryObject) -> dict[str, Any]:
+    """Convert a Gramps object to JSON."""
+    try:
+        # Gramps 6.x
+        from gramps.gen.lib.json_utils import object_to_dict
+
+        return object_to_dict(obj)
+    except ImportError:
+        # Gramps 5.x
+        from gramps.gen.lib.serialize import to_json
+
+        return json.loads(to_json(obj))
+
 
 pp.ParserElement.enablePackrat()
 
 
 def to_dict(obj: PrimaryObject) -> dict[str, Any]:
     """Convert a Gramps object to its dictionary representation."""
-    obj_dict = json.loads(to_json(obj))
+    obj_dict = obj_to_json(obj)
     obj_dict["class"] = obj_dict["_class"].lower()
     return obj_dict
 
