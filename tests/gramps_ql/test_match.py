@@ -1,3 +1,5 @@
+from gramps.gen.lib import Note, Person, Tag
+
 from gramps_ql import match
 from gramps_ql.gql import GQLQuery
 
@@ -118,3 +120,36 @@ def test_all_number():
     assert not q.match({"array": []})
     assert not q.match({"array": [{"value": 1}, {"value": 3}]})
     assert q.match({"array": [{"value": 3}, {"value": 3}]})
+
+
+def test_any_no_dict():
+    # the items are strings (e.g. handles), so the path cannot be resolved
+    q = GQLQuery("array.any.value = a")
+    assert not q.match({"array": ["a"]})
+    q = GQLQuery("array.all.value = a")
+    assert not q.match({"array": ["a"]})
+
+
+def test_match_gramps_object():
+    person = Person()
+    person.set_gramps_id("person001")
+    assert match("gramps_id = person001", person)
+    assert not match("gramps_id = person002", person)
+
+
+def test_match_note():
+    # Note is not a PrimaryObject, but must be converted to a dict as well
+    note = Note()
+    note.set_gramps_id("note001")
+    note.set("Hello world")
+    assert match("gramps_id = note001", note)
+    assert not match("gramps_id = note002", note)
+    assert match("text.string ~ hello", note)
+    assert not match("text.string ~ bye", note)
+
+
+def test_match_tag():
+    tag = Tag()
+    tag.set_name("mytag")
+    assert match("name = mytag", tag)
+    assert not match("name = othertag", tag)

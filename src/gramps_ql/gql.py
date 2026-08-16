@@ -9,13 +9,17 @@ from typing import Any, Optional, Union
 import pyparsing as pp
 from gramps.gen.db import DbReadBase
 from gramps.gen.errors import HandleError
-from gramps.gen.lib import PrimaryObject
+from gramps.gen.lib.tableobj import TableObject
 
 
 pp.ParserElement.enablePackrat()
 
+# any Gramps object stored in a database table: primary objects like Person or
+# Event, but also Note and Tag, which are not PrimaryObject subclasses
+GrampsObject = TableObject
 
-def obj_to_json(obj: PrimaryObject) -> dict[str, Any]:
+
+def obj_to_json(obj: GrampsObject) -> dict[str, Any]:
     """Convert a Gramps object to JSON."""
     try:
         # Gramps 6.x
@@ -29,7 +33,7 @@ def obj_to_json(obj: PrimaryObject) -> dict[str, Any]:
         return json.loads(to_json(obj))
 
 
-def to_dict(obj: PrimaryObject) -> dict[str, Any]:
+def to_dict(obj: GrampsObject) -> dict[str, Any]:
     """Convert a Gramps object to its dictionary representation."""
     obj_dict = obj_to_json(obj)
     obj_dict["class"] = obj_dict["_class"].lower()
@@ -38,18 +42,17 @@ def to_dict(obj: PrimaryObject) -> dict[str, Any]:
 
 def match(
     query: str,
-    obj: Union[PrimaryObject, dict[str, Any]],
+    obj: Union[GrampsObject, dict[str, Any]],
     db: Optional[DbReadBase] = None,
 ) -> bool:
     """Match a single object (optionally given as dictionary) to a query."""
     gq = GQLQuery(query=query, db=db)
-    if isinstance(obj, PrimaryObject):
-        obj_dict = to_dict(obj)
-        return gq.match(obj_dict)
+    if not isinstance(obj, dict):
+        obj = to_dict(obj)
     return gq.match(obj)
 
 
-def iter_objects(query: str, db: DbReadBase) -> Generator[PrimaryObject, None, None]:
+def iter_objects(query: str, db: DbReadBase) -> Generator[GrampsObject, None, None]:
     """Iterate over primary objects in a Gramps database."""
     gq = GQLQuery(query=query, db=db)
     return gq.iter_objects()
@@ -156,9 +159,14 @@ class GQLQuery:
         parsed = parse_lhs(lhs)
         if not parsed:
             raise ValueError(f"Unable to parse left-hand side: {lhs}")
+        result = None
         for i, part in enumerate(parsed):
             if i == 0 and isinstance(obj, dict):
                 result = obj.get(parsed[0])
+            elif i == 0 and not (isinstance(part, str) and part.startswith("get_")):
+                # the object is not a dictionary (e.g. a handle string), so the
+                # first path segment can only be resolved by a get_ method
+                return False
             elif part in ["[", "]", "."]:
                 continue
             elif part == "length":
@@ -243,7 +251,7 @@ class GQLQuery:
         except TypeError:
             return False
 
-    def iter_objects(self) -> Generator[PrimaryObject, None, None]:
+    def iter_objects(self) -> Generator[GrampsObject, None, None]:
         """Iterate over primary objects in a Gramps database."""
         if not self.db:
             raise ValueError("Database is needed for iterating objects!")
