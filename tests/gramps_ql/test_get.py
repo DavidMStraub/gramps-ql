@@ -18,7 +18,7 @@ def db():
     TEST_GRAMPSHOME = tempfile.mkdtemp()
     os.environ["GRAMPSHOME"] = TEST_GRAMPSHOME
     dbman = CLIDbManager(DbState())
-    path, name = dbman.create_new_db_cli("GQL Test", dbid="sqlite")
+    path, _name = dbman.create_new_db_cli("GQL Test", dbid="sqlite")
     db = make_database("sqlite")
     db.load(path)
     with DbTxn("Add test objects", db) as trans:

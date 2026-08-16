@@ -8,6 +8,8 @@ This Python library provides GQL, a query language to a [Gramps](https://github.
 python -m pip install gramps-ql
 ```
 
+Requires Python 3.10 or newer and Gramps 6.0 or newer.
+
 ## Usage
 
 You can iterate over objects in a database matching the query:
@@ -41,7 +43,7 @@ A GQL query is a string composed of statements of the form `property operator va
 
 #### `class`
 
-Filters for the Gramps object class and can be one of `person`, `family`, `event`, `place`, `citation`, `source`, `repository`, `media`, or `note`.
+Filters for the Gramps object class and can be one of `person`, `family`, `event`, `place`, `citation`, `source`, `repository`, `media`, `note`, or `tag`.
 
 #### Object properties
 
@@ -137,6 +139,16 @@ class = family and child_ref_list.all.ref.get_person.gender = 0 and child_ref_li
 All families with three daughters.
 
 
+## Development
+
+```
+python -m pip install -e . --group dev
+pytest
+ruff check .
+ruff format .
+mypy src
+```
+
 ## Roadmap
 
 GQL could be used in Gramplets or in Gramps Web (API).
@@ -150,13 +162,14 @@ Suggestions for improvment as well as contributions are welcome!
 
 ## Full list of Gramps Properties
 
-The following properties of Gramps objects exist as of Gramps 5.2.
+The following properties of Gramps objects exist as of Gramps 6.0.
 
 Here, `[]` indicates array properties, on which index (`[0]` etc.), `any`, `all`, and `length` are supported.
 
-Obviously, many of those properties are only present on some of the primary Gramps object types.
+Obviously, many of those properties are only present on some of the Gramps object types.
 
 ```
+_class
 abbrev
 address_list
 address_list[]._class
@@ -232,6 +245,7 @@ alternate_names[].surname_list[].connector
 alternate_names[].surname_list[].origintype
 alternate_names[].surname_list[].origintype._class
 alternate_names[].surname_list[].origintype.string
+alternate_names[].surname_list[].origintype.value
 alternate_names[].surname_list[].prefix
 alternate_names[].surname_list[].primary
 alternate_names[].surname_list[].surname
@@ -239,6 +253,7 @@ alternate_names[].title
 alternate_names[].type
 alternate_names[].type._class
 alternate_names[].type.string
+alternate_names[].type.value
 attribute_list
 attribute_list[]._class
 attribute_list[].citation_list
@@ -247,6 +262,7 @@ attribute_list[].private
 attribute_list[].type
 attribute_list[].type._class
 attribute_list[].type.string
+attribute_list[].type.value
 attribute_list[].value
 author
 birth_ref_index
@@ -258,14 +274,17 @@ child_ref_list[].citation_list
 child_ref_list[].frel
 child_ref_list[].frel._class
 child_ref_list[].frel.string
+child_ref_list[].frel.value
 child_ref_list[].mrel
 child_ref_list[].mrel._class
 child_ref_list[].mrel.string
+child_ref_list[].mrel.value
 child_ref_list[].note_list
 child_ref_list[].private
 child_ref_list[].ref
 citation_list
 code
+color
 confidence
 date
 date._class
@@ -289,6 +308,7 @@ event_ref_list[].attribute_list[].private
 event_ref_list[].attribute_list[].type
 event_ref_list[].attribute_list[].type._class
 event_ref_list[].attribute_list[].type.string
+event_ref_list[].attribute_list[].type.value
 event_ref_list[].attribute_list[].value
 event_ref_list[].citation_list
 event_ref_list[].note_list
@@ -297,6 +317,7 @@ event_ref_list[].ref
 event_ref_list[].role
 event_ref_list[].role._class
 event_ref_list[].role.string
+event_ref_list[].role.value
 family_list
 father_handle
 format
@@ -334,6 +355,7 @@ media_list[].attribute_list[].private
 media_list[].attribute_list[].type
 media_list[].attribute_list[].type._class
 media_list[].attribute_list[].type.string
+media_list[].attribute_list[].type.value
 media_list[].attribute_list[].value
 media_list[].citation_list
 media_list[].note_list
@@ -370,6 +392,7 @@ place
 place_type
 place_type._class
 place_type.string
+place_type.value
 placeref_list
 placeref_list[]._class
 placeref_list[].date
@@ -410,6 +433,7 @@ primary_name.surname_list[].connector
 primary_name.surname_list[].origintype
 primary_name.surname_list[].origintype._class
 primary_name.surname_list[].origintype.string
+primary_name.surname_list[].origintype.value
 primary_name.surname_list[].prefix
 primary_name.surname_list[].primary
 primary_name.surname_list[].surname
@@ -417,6 +441,8 @@ primary_name.title
 primary_name.type
 primary_name.type._class
 primary_name.type.string
+primary_name.type.value
+priority
 private
 pubinfo
 reporef_list
@@ -425,6 +451,7 @@ reporef_list[].call_number
 reporef_list[].media_type
 reporef_list[].media_type._class
 reporef_list[].media_type.string
+reporef_list[].media_type.value
 reporef_list[].note_list
 reporef_list[].private
 reporef_list[].ref
@@ -438,12 +465,14 @@ text.tags[]._class
 text.tags[].name
 text.tags[].name._class
 text.tags[].name.string
+text.tags[].name.value
 text.tags[].ranges
 text.tags[].value
 title
 type
 type._class
 type.string
+type.value
 urls
 urls[]._class
 urls[].desc
@@ -452,4 +481,5 @@ urls[].private
 urls[].type
 urls[].type._class
 urls[].type.string
+urls[].type.value
 ```

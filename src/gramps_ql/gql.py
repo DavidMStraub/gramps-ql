@@ -1,36 +1,25 @@
 """Gramps Query Language."""
 
-from __future__ import annotations  # can be removed at 3.9 EOL
-
-import json
 from collections.abc import Generator
-from typing import Any, Optional, Union
+from typing import Any, TypeAlias
 
 import pyparsing as pp
 from gramps.gen.db import DbReadBase
 from gramps.gen.errors import HandleError
-from gramps.gen.lib.tableobj import TableObject
-
+from gramps.gen.lib.json_utils import object_to_dict
 
 pp.ParserElement.enablePackrat()
 
 # any Gramps object stored in a database table: primary objects like Person or
-# Event, but also Note and Tag, which are not PrimaryObject subclasses
-GrampsObject = TableObject
+# Event, but also Note and Tag, which are not PrimaryObject subclasses.
+# Gramps ships no type information, hence the alias to Any.
+GrampsObject: TypeAlias = Any
 
 
 def obj_to_json(obj: GrampsObject) -> dict[str, Any]:
     """Convert a Gramps object to JSON."""
-    try:
-        # Gramps 6.x
-        from gramps.gen.lib.json_utils import object_to_dict
-
-        return object_to_dict(obj)
-    except ImportError:
-        # Gramps 5.x
-        from gramps.gen.lib.serialize import to_json
-
-        return json.loads(to_json(obj))
+    obj_dict: dict[str, Any] = object_to_dict(obj)
+    return obj_dict
 
 
 def to_dict(obj: GrampsObject) -> dict[str, Any]:
@@ -42,8 +31,8 @@ def to_dict(obj: GrampsObject) -> dict[str, Any]:
 
 def match(
     query: str,
-    obj: Union[GrampsObject, dict[str, Any]],
-    db: Optional[DbReadBase] = None,
+    obj: GrampsObject | dict[str, Any],
+    db: DbReadBase | None = None,
 ) -> bool:
     """Match a single object (optionally given as dictionary) to a query."""
     gq = GQLQuery(query=query, db=db)
@@ -53,7 +42,7 @@ def match(
 
 
 def iter_objects(query: str, db: DbReadBase) -> Generator[GrampsObject, None, None]:
-    """Iterate over primary objects in a Gramps database."""
+    """Iterate over objects in a Gramps database."""
     gq = GQLQuery(query=query, db=db)
     return gq.iter_objects()
 
@@ -92,42 +81,45 @@ GRAMPS_OBJECT_NAMES = {
     "repository": "repositories",
     "media": "media",
     "note": "notes",
+    "tag": "tags",
 }
 
 
-def parse(query: str):
+def parse(query: str) -> pp.ParseResults:
     """Parse a query."""
     return infix.parse_string(query, parse_all=True)
 
 
-def parse_lhs(query: str):
+def parse_lhs(query: str) -> pp.ParseResults:
+    """Parse the left-hand side of a query."""
     return lhs.parse_string(query, parse_all=True)
 
 
 class GQLQuery:
     """GQL query class."""
 
-    def __init__(self, query: str, db: Optional[DbReadBase] = None):
+    def __init__(self, query: str, db: DbReadBase | None = None) -> None:
+        """Initialize self."""
         self.query = query
         self.parsed = parse(self.query)
         self.db = db
 
     @staticmethod
-    def _combine_logical(op: Optional[str], value1: bool, value2: bool) -> bool:
+    def _combine_logical(op: str | None, value1: bool | None, value2: bool) -> bool:
         """Combine booleans with a logical operator as string."""
         if op == "and":
-            return value1 and value2
+            return bool(value1) and value2
         elif op == "or":
-            return value1 or value2
+            return bool(value1) or value2
         # if op is None, return the second value
         return value2
 
-    def _traverse(self, parsed_list: list, obj: dict[str, Any]):
+    def _traverse(self, parsed_list: list[Any], obj: dict[str, Any]) -> bool:
         """Traverse a nested parsed list."""
-        result = None
-        op = None
-        expression = []
-        for i, item in enumerate(parsed_list):
+        result: bool | None = None
+        op: str | None = None
+        expression: list[Any] = []
+        for item in parsed_list:
             if isinstance(item, list) or item in ["and", "or"]:
                 if expression:
                     value = self._match_single(obj, *expression)
@@ -145,7 +137,7 @@ class GQLQuery:
         if expression:
             value = self._match_single(obj, *expression)
             result = self._combine_logical(op, result, value)
-        return result
+        return bool(result)
 
     def match(self, obj: dict[str, Any]) -> bool:
         """Match an object to the query."""
@@ -153,16 +145,16 @@ class GQLQuery:
         return self._traverse(parsed_list, obj)
 
     def _match_single(
-        self, obj: dict[str, Any], lhs: str, operator: str = "", rhs: str = ""
+        self, obj: Any, lhs: str, operator: str = "", rhs: Any = ""
     ) -> bool:
         """Match an object to a single condition."""
         parsed = parse_lhs(lhs)
         if not parsed:
             raise ValueError(f"Unable to parse left-hand side: {lhs}")
-        result = None
+        result: Any = None
         for i, part in enumerate(parsed):
             if i == 0 and isinstance(obj, dict):
-                result = obj.get(parsed[0])
+                result = obj.get(part)
             elif i == 0 and not (isinstance(part, str) and part.startswith("get_")):
                 # the object is not a dictionary (e.g. a handle string), so the
                 # first path segment can only be resolved by a get_ method
@@ -186,7 +178,8 @@ class GQLQuery:
                     raise ValueError(f"'any' cannot be followed by {parsed[i + 1]}")
                 try:
                     if part == "all":
-                        return results and all(results)  # because all([]) is True
+                        # bool(results) because all([]) is True
+                        return bool(results) and all(results)
                     else:
                         return any(results)
                 except TypeError:
@@ -210,7 +203,7 @@ class GQLQuery:
                 return False
         return self._match_values(result, operator, rhs)
 
-    def _match_values(self, result, operator: str = "", rhs: str = "") -> bool:
+    def _match_values(self, result: Any, operator: str = "", rhs: Any = "") -> bool:
         """Match two values."""
         if not operator:
             return bool(result)
@@ -221,41 +214,38 @@ class GQLQuery:
                 rhs = rhs.strip("\"'")
         if operator == "=":
             if isinstance(result, str):
-                rhs = str(rhs)
-                return result.casefold() == rhs.casefold()
-            return result == rhs
+                return result.casefold() == str(rhs).casefold()
+            return bool(result == rhs)
         if operator == "!=":
             if isinstance(result, str):
-                rhs = str(rhs)
-                return result.casefold() != rhs.casefold()
-            return result != rhs
+                return result.casefold() != str(rhs).casefold()
+            return bool(result != rhs)
         if operator == "~":
             if isinstance(result, str):
-                rhs = str(rhs)
-                return rhs.casefold() in result.casefold()
-            return rhs in result
+                return str(rhs).casefold() in result.casefold()
+            return bool(rhs in result)
         if operator == "!~":
             if isinstance(result, str):
-                rhs = str(rhs)
-                return rhs.casefold() in result.casefold()
-            return rhs not in result
+                return str(rhs).casefold() not in result.casefold()
+            return bool(rhs not in result)
         try:
             if operator == "<":
-                return result < rhs
+                return bool(result < rhs)
             if operator == ">":
-                return result > rhs
+                return bool(result > rhs)
             if operator == "<=":
-                return result <= rhs
+                return bool(result <= rhs)
             if operator == ">=":
-                return result >= rhs
+                return bool(result >= rhs)
         except TypeError:
             return False
+        return False
 
     def iter_objects(self) -> Generator[GrampsObject, None, None]:
-        """Iterate over primary objects in a Gramps database."""
+        """Iterate over objects in a Gramps database."""
         if not self.db:
             raise ValueError("Database is needed for iterating objects!")
-        for object_name, objects_name in GRAMPS_OBJECT_NAMES.items():
+        for objects_name in GRAMPS_OBJECT_NAMES.values():
             iter_method = getattr(self.db, f"iter_{objects_name}")
             for obj in iter_method():
                 obj_dict = to_dict(obj)
